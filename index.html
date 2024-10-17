@@ -1,0 +1,257 @@
+<html><head><base href="https://websimcreationengine.com/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resizable WebSim Maps</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Arial', sans-serif;
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .map-container {
+        width: 80%;
+        height: 80%;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        resize: both;
+        min-width: 300px;
+        min-height: 200px;
+    }
+    .map-header {
+        background-color: #e0e0e0;
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .map-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #404040;
+    }
+    .map-controls {
+        display: flex;
+        gap: 10px;
+    }
+    .map-button {
+        background-color: #d0d0d0;
+        border: none;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    #map {
+        flex-grow: 1;
+        width: 100%;
+    }
+    .search-container {
+        position: absolute;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: #ffffff;
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #search-input {
+        width: 250px;
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #d0d0d0;
+        border-radius: 2px;
+    }
+    #search-button {
+        padding: 8px 15px;
+        font-size: 14px;
+        background-color: #808080;
+        color: white;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    #search-button:hover {
+        background-color: #606060;
+    }
+    .resize-handle {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #808080;
+        border-radius: 50%;
+    }
+    .resize-handle-nw { top: -5px; left: -5px; cursor: nw-resize; }
+    .resize-handle-ne { top: -5px; right: -5px; cursor: ne-resize; }
+    .resize-handle-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+    .resize-handle-se { bottom: -5px; right: -5px; cursor: se-resize; }
+    .resize-handle-n { top: -5px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+    .resize-handle-s { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+    .resize-handle-w { left: -5px; top: 50%; transform: translateY(-50%); cursor: w-resize; }
+    .resize-handle-e { right: -5px; top: 50%; transform: translateY(-50%); cursor: e-resize; }
+</style>
+</head>
+<body>
+<div class="map-container" id="resizable-map-container">
+    <div class="map-header">
+        <div class="map-title">WebSim Maps</div>
+        <div class="map-controls">
+            <button class="map-button" style="background-color: #ff6b6b;"></button>
+            <button class="map-button" style="background-color: #feca57;"></button>
+            <button class="map-button" style="background-color: #48dbfb;"></button>
+        </div>
+    </div>
+    <div id="map"></div>
+    <div class="resize-handle resize-handle-nw"></div>
+    <div class="resize-handle resize-handle-ne"></div>
+    <div class="resize-handle resize-handle-sw"></div>
+    <div class="resize-handle resize-handle-se"></div>
+    <div class="resize-handle resize-handle-n"></div>
+    <div class="resize-handle resize-handle-s"></div>
+    <div class="resize-handle resize-handle-w"></div>
+    <div class="resize-handle resize-handle-e"></div>
+</div>
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="Search location...">
+    <button id="search-button">Go</button>
+</div>
+
+<script>
+    var map = L.map('map', {
+        zoomControl: false
+    }).setView([51.505, -0.09], 13);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap contributors, © CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
+
+    L.control.zoom({
+        position: 'bottomright'
+    }).addTo(map);
+
+    function searchLocation() {
+        var query = document.getElementById('search-input').value;
+        if (query) {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        var lat = parseFloat(data[0].lat);
+                        var lon = parseFloat(data[0].lon);
+                        map.setView([lat, lon], 13);
+                        L.circleMarker([lat, lon], {
+                            color: '#404040',
+                            fillColor: '#606060',
+                            fillOpacity: 0.5,
+                            radius: 8
+                        }).addTo(map)
+                            .bindPopup(data[0].display_name)
+                            .openPopup();
+                    } else {
+                        alert('Location not found');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
+
+    document.getElementById('search-button').addEventListener('click', searchLocation);
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchLocation();
+        }
+    });
+
+    // Sample markers
+    L.circleMarker([51.5, -0.09], {
+        color: '#404040',
+        fillColor: '#606060',
+        fillOpacity: 0.5,
+        radius: 8
+    }).addTo(map).bindPopup('A sample marker').openPopup();
+
+    L.circle([51.508, -0.11], {
+        color: '#404040',
+        fillColor: '#808080',
+        fillOpacity: 0.3,
+        radius: 500
+    }).addTo(map).bindPopup('A circle area');
+
+    L.polygon([
+        [51.509, -0.08],
+        [51.503, -0.06],
+        [51.51, -0.047]
+    ], {
+        color: '#404040',
+        fillColor: '#a0a0a0',
+        fillOpacity: 0.2
+    }).addTo(map).bindPopup('A polygon area');
+
+    // Resize functionality
+    const container = document.getElementById('resizable-map-container');
+    const resizeHandles = document.querySelectorAll('.resize-handle');
+
+    resizeHandles.forEach(handle => {
+        handle.addEventListener('mousedown', initResize, false);
+    });
+
+    function initResize(e) {
+        window.addEventListener('mousemove', resize, false);
+        window.addEventListener('mouseup', stopResize, false);
+    }
+
+    function resize(e) {
+        if (e.target.classList.contains('resize-handle-se') || 
+            e.target.classList.contains('resize-handle-e') || 
+            e.target.classList.contains('resize-handle-s')) {
+            container.style.width = (e.clientX - container.offsetLeft) + 'px';
+            container.style.height = (e.clientY - container.offsetTop) + 'px';
+        } else if (e.target.classList.contains('resize-handle-sw')) {
+            container.style.width = (container.offsetLeft + container.offsetWidth - e.clientX) + 'px';
+            container.style.height = (e.clientY - container.offsetTop) + 'px';
+            container.style.left = e.clientX + 'px';
+        } else if (e.target.classList.contains('resize-handle-nw')) {
+            container.style.width = (container.offsetLeft + container.offsetWidth - e.clientX) + 'px';
+            container.style.height = (container.offsetTop + container.offsetHeight - e.clientY) + 'px';
+            container.style.top = e.clientY + 'px';
+            container.style.left = e.clientX + 'px';
+        } else if (e.target.classList.contains('resize-handle-ne')) {
+            container.style.width = (e.clientX - container.offsetLeft) + 'px';
+            container.style.height = (container.offsetTop + container.offsetHeight - e.clientY) + 'px';
+            container.style.top = e.clientY + 'px';
+        } else if (e.target.classList.contains('resize-handle-n')) {
+            container.style.height = (container.offsetTop + container.offsetHeight - e.clientY) + 'px';
+            container.style.top = e.clientY + 'px';
+        } else if (e.target.classList.contains('resize-handle-w')) {
+            container.style.width = (container.offsetLeft + container.offsetWidth - e.clientX) + 'px';
+            container.style.left = e.clientX + 'px';
+        }
+        map.invalidateSize();
+    }
+
+    function stopResize(e) {
+        window.removeEventListener('mousemove', resize, false);
+        window.removeEventListener('mouseup', stopResize, false);
+    }
+
+    // Ensure the map fills the container after it's loaded
+    map.invalidateSize();
+</script>
+</body>
+</html>
