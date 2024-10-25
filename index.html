@@ -1,0 +1,567 @@
+<html><head><base href="https://websimcreationengine.com/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VRTWORKS : FOLLOW THE TRAIL</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        font-family: 'Arial', sans-serif;
+        overflow: hidden;
+    }
+    
+    #map {
+        height: 100vh;
+        width: 100vw;
+        z-index: 1;
+    }
+    
+    .leaflet-layer {
+        filter: hue-rotate(320deg) saturate(0.8);
+    }
+
+    .map-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(255, 105, 180, 0.9);
+        padding: 0;
+        text-align: center;
+        z-index: 1000;
+        height: 10px;
+        margin-top: 45px;
+    }
+
+    .scrolling-title {
+        width: 100%; 
+        overflow: hidden; 
+        white-space: nowrap; 
+        position: fixed;
+        top: 10px;
+        left: 0;
+        right: 0;
+        z-index: 1001;
+    }
+
+    .scrolling-title span {
+        display: inline-block;
+        font-family: 'Arial', sans-serif;
+        font-size: 72px;
+        font-weight: bold;
+        color: #404040;
+        text-transform: uppercase;
+        padding-left: 100%;
+        animation: scroll-left 20s linear infinite;
+    }
+
+    @keyframes scroll-left {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+    
+    .instagram-icon {
+        position: fixed;
+        left: 20px;
+        top: 70px;
+        font-size: 72px;
+        color: #404040;
+        cursor: pointer;
+        transition: color 0.3s;
+        z-index: 1000;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .instagram-icon:hover {
+        color: #FF69B4;
+    }
+    
+    .controls-overlay {
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 5px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1000;
+        width: 180px;
+    }
+    
+    .concentric-circles {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 300px;
+        pointer-events: none;
+        z-index: 1000;
+    }
+
+    .circle {
+        position: absolute;
+        border: 2px solid rgba(255, 105, 180, 0.3);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+
+    .circle:nth-child(1) {
+        width: 60px;
+        height: 60px;
+        opacity: 1;
+    }
+
+    .circle:nth-child(2) {
+        width: 120px;
+        height: 120px;
+        opacity: 0.8;
+    }
+
+    .circle:nth-child(3) {
+        width: 180px;
+        height: 180px;
+        opacity: 0.6;
+    }
+
+    .circle:nth-child(4) {
+        width: 240px;
+        height: 240px;
+        opacity: 0.4;
+    }
+
+    .circle:nth-child(5) {
+        width: 300px;
+        height: 300px;
+        opacity: 0.2;
+    }
+    
+    #search-input, #pin-name {
+        width: 100%;
+        padding: 4px;
+        font-size: 12px;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid #d0d0d0;
+        border-radius: 2px;
+        margin: 0;
+        box-sizing: border-box;
+        autocomplete: off;
+    }
+    
+    #search-button, #create-pin-button {
+        width: 100%;
+        padding: 4px;
+        font-size: 12px;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        text-transform: uppercase;
+        background-color: #808080;
+        color: white;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin: 2px 0 0 0;
+    }
+    
+    #search-button:hover, #create-pin-button:hover {
+        background-color: #606060;
+    }
+    
+    .search-container {
+        margin: 0;
+    }
+
+    .pin-creator {
+        display: none;
+        margin-top: 2px;
+    }
+
+    .pin-label {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        color: black;
+        margin-top: -25px;
+        width: auto !important;
+        text-align: center;
+    }
+
+    .search-result-label {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        color: black;
+        opacity: 1 !important;
+        pointer-events: none;
+    }
+
+    .leaflet-popup-tip-container {
+        display: none;
+    }
+
+    .leaflet-popup-content-wrapper {
+        background: none;
+        box-shadow: none;
+        color: black;
+        font-weight: bold;
+        font-family: 'Arial', sans-serif;
+    }
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px white inset !important;
+    }
+
+    .comments-box {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 180px;
+        height: 300px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        overflow-y: auto;
+        padding: 10px;
+        box-sizing: border-box;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .comment {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        font-size: 12px;
+        font-family: 'Arial', sans-serif;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideIn 0.3s ease forwards;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+
+    .comment-user {
+        font-weight: bold;
+        color: #FF69B4;
+    }
+
+    .comment-time {
+        color: #808080;
+        font-size: 10px;
+        margin-left: 5px;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1; 
+            transform: translateY(0);
+        }
+    }
+</style>
+</head>
+
+<body>
+    <div class="map-header">
+        <div class="scrolling-title">
+            <span>#VRTWORKS_</span>
+        </div>
+    </div>
+    
+    <div class="concentric-circles">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+    
+    <i class="fab fa-instagram instagram-icon"></i>
+    
+    <div class="controls-overlay">
+        <div class="search-container">
+            <input type="text" 
+                   id="search-input" 
+                   placeholder="SEARCH LOCATION..." 
+                   autocomplete="off" 
+                   spellcheck="false">
+            <button id="search-button">SEARCH</button>
+        </div>
+        <div class="pin-creator">
+            <input type="text" 
+                   id="pin-name" 
+                   placeholder="ENTER PIN NAME..." 
+                   autocomplete="off" 
+                   spellcheck="false">
+            <button id="create-pin-button">CREATE PIN</button>
+        </div>
+    </div>
+    
+    <div class="comments-box" id="comments-box"></div>
+    <div id="map"></div>
+
+    <script>
+        const yorkLat = 53.9600;
+        const yorkLon = -1.0873;
+        const SECRET_PASSWORD = "VRTW0RKZ";
+
+        const updatePinLabelOpacity = function(marker) {
+            const markerLatLng = marker.getLatLng();
+            const markerPoint = map.latLngToContainerPoint(markerLatLng);
+            const centerPoint = map.getSize().divideBy(2);
+            const distance = markerPoint.distanceTo(centerPoint);
+            
+            const circles = document.querySelectorAll('.circle');
+            const radii = Array.from(circles).map(circle => circle.offsetWidth / 2);
+            
+            let opacity = 0;
+            for (let i = 0; i < radii.length; i++) {
+                if (distance <= radii[i]) {
+                    opacity = 1 - (i * 0.2);
+                    break;
+                }
+            }
+            
+            const tooltip = marker.getTooltip();
+            if (tooltip) {
+                tooltip.getElement().style.opacity = opacity;
+            }
+        };
+
+        var map = L.map('map', {
+            zoomControl: false
+        }).setView([yorkLat, yorkLon], 13);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors, © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+        
+        var style = document.createElement('style');
+        style.textContent = `
+            .leaflet-tile-container img {
+                filter: hue-rotate(320deg) saturate(0.8) !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
+
+        function createPermanentLabel(marker, content) {
+            var label = L.tooltip({
+                permanent: true,
+                direction: 'center',
+                className: 'pin-label'
+            })
+            .setLatLng(marker.getLatLng())
+            .setContent(content);
+            
+            marker.bindTooltip(label);
+            return label;
+        }
+
+        var initialMarker = L.circleMarker([53.96645941017445, -1.0790180365946125], {
+            color: '#FF69B4',
+            fillColor: '#FF69B4',
+            fillOpacity: 0.5,
+            radius: 15
+        }).addTo(map);
+        createPermanentLabel(initialMarker, '#6');
+        
+        map.on('move', function() {
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.CircleMarker) {
+                    updatePinLabelOpacity(layer);
+                }
+            });
+        });
+        
+        document.querySelector('.instagram-icon').addEventListener('click', function() {
+            window.open('https://www.instagram.com/vrtworks_?igsh=MWtwanM4OTJlamdubg==', '_blank');
+        });
+        
+        function searchLocation() {
+            var query = document.getElementById('search-input').value;
+            
+            if (query === SECRET_PASSWORD) {
+                document.querySelector('.pin-creator').style.display = 'block';
+                document.getElementById('search-input').value = '';
+                return;
+            }
+            
+            if (query) {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lon = parseFloat(data[0].lon);
+                            map.setView([lat, lon], 13);
+                            
+                            L.tooltip({
+                                permanent: true,
+                                direction: 'center',
+                                className: 'search-result-label'
+                            })
+                            .setLatLng([lat, lon])
+                            .setContent(query.toUpperCase())
+                            .addTo(map);
+                            
+                        } else {
+                            alert('Location not found');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+        
+        document.getElementById('search-button').addEventListener('click', searchLocation);
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchLocation();
+            }
+        });
+        
+        let isCreatingPin = false;
+        
+        function startPinCreation() {
+            isCreatingPin = true;
+            map.getContainer().style.cursor = 'crosshair';
+        }
+        
+        function createPin(e) {
+            if (!isCreatingPin) return;
+        
+            const pinName = document.getElementById('pin-name').value || 'UNNAMED PIN';
+            
+            var marker = L.circleMarker(e.latlng, {
+                color: '#FF69B4',
+                fillColor: '#FF69B4',
+                fillOpacity: 0.5,
+                radius: 15
+            }).addTo(map);
+            
+            createPermanentLabel(marker, pinName.toUpperCase());
+        
+            isCreatingPin = false;
+            map.getContainer().style.cursor = '';
+        }
+        
+        document.getElementById('create-pin-button').addEventListener('click', startPinCreation);
+        map.on('click', createPin);
+        
+        window.addEventListener('resize', function() {
+            map.invalidateSize();
+        });
+
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.setAttribute('autocomplete', 'off');
+            input.setAttribute('autocorrect', 'off');
+            input.setAttribute('autocapitalize', 'off');
+            input.setAttribute('spellcheck', 'false');
+        });
+
+        const sampleUsers = ["alex_89", "creative_soul", "wanderlust_22", "art_lover", "urban_explorer", "photo_ninja", "street_scout", "city_walker"];
+        const sampleComments = [
+            "Amazing spot! 🌟",
+            "Love the vibes here ✨",
+            "Perfect day for exploring 🌅",
+            "Can't wait to visit again! 🗺️",
+            "Great location 📍",
+            "Just discovered this place! 🙌",
+            "Beautiful area 🌿",
+            "Hidden gem 💎"
+        ];
+
+        function formatTime(date) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        function updateComments() {
+            const commentsBox = document.getElementById('comments-box');
+            const numComments = Math.floor(Math.random() * 3) + 3;
+            const selectedComments = [];
+            const currentTime = new Date();
+            
+            for (let i = 0; i < numComments; i++) {
+                const randomCommentIndex = Math.floor(Math.random() * sampleComments.length);
+                const randomUserIndex = Math.floor(Math.random() * sampleUsers.length);
+                const timeOffset = (numComments - i - 1) * Math.floor(Math.random() * 10); 
+                const commentTime = new Date(currentTime - timeOffset * 60000);
+                
+                selectedComments.push({
+                    user: sampleUsers[randomUserIndex],
+                    comment: sampleComments[randomCommentIndex],
+                    time: formatTime(commentTime)
+                });
+            }
+
+            const existingComments = commentsBox.querySelectorAll('.comment');
+            existingComments.forEach(comment => {
+                comment.style.opacity = '0';
+                comment.style.transform = 'translateY(20px)';
+            });
+
+            setTimeout(() => {
+                commentsBox.innerHTML = selectedComments
+                    .map(({user, comment, time}) => `
+                        <div class="comment">
+                            <span class="comment-user">@${user}</span>
+                            <span class="comment-time">${time}</span>
+                            <br>${comment}
+                        </div>
+                    `)
+                    .join('');
+            }, 300);
+        }
+
+        updateComments();
+
+        function setRandomInterval() {
+            const minDelay = 3000; 
+            const maxDelay = 10000; 
+            const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+            
+            setTimeout(() => {
+                updateComments();
+                setRandomInterval();
+            }, randomDelay);
+        }
+
+        setRandomInterval();
+    </script>
+</body>
+</html>
