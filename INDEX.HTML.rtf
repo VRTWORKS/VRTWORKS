@@ -1,0 +1,571 @@
+{\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang2057{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset1 Segoe UI Symbol;}{\f2\fnil\fcharset1 Segoe UI Symbol;}{\f3\fnil\fcharset1 Segoe UI Emoji;}}
+{\*\generator Riched20 10.0.22621}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 <html><head><base href="https://websimcreationengine.com/">\par
+<meta charset="UTF-8">\par
+<meta name="viewport" content="width=device-width, initial-scale=1.0">\par
+<title>VRTWORKS : FOLLOW THE TRAIL</title>\par
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />\par
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>\par
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">\par
+<style>\par
+    body, html \{\par
+        margin: 0;\par
+        padding: 0;\par
+        height: 100vh;\par
+        width: 100vw;\par
+        font-family: 'Arial', sans-serif;\par
+        overflow: hidden;\par
+    \}\par
+    \par
+    #map \{\par
+        height: 100vh;\par
+        width: 100vw;\par
+        z-index: 1;\par
+    \}\par
+    \par
+    .leaflet-layer \{\par
+        filter: hue-rotate(320deg) saturate(0.8);\par
+    \}\par
+\par
+    .map-header \{\par
+        position: fixed;\par
+        top: 0;\par
+        left: 0;\par
+        right: 0;\par
+        background-color: rgba(255, 105, 180, 0.9);\par
+        padding: 0;\par
+        text-align: center;\par
+        z-index: 1000;\par
+        height: 10px;\par
+        margin-top: 45px;\par
+    \}\par
+\par
+    .scrolling-title \{\par
+        width: 100%; \par
+        overflow: hidden; \par
+        white-space: nowrap; \par
+        position: fixed;\par
+        top: 10px;\par
+        left: 0;\par
+        right: 0;\par
+        z-index: 1001;\par
+    \}\par
+\par
+    .scrolling-title span \{\par
+        display: inline-block;\par
+        font-family: 'Arial', sans-serif;\par
+        font-size: 72px;\par
+        font-weight: bold;\par
+        color: #404040;\par
+        text-transform: uppercase;\par
+        padding-left: 100%;\par
+        animation: scroll-left 20s linear infinite;\par
+    \}\par
+\par
+    @keyframes scroll-left \{\par
+        0% \{\par
+            transform: translateX(0);\par
+        \}\par
+        100% \{\par
+            transform: translateX(-100%);\par
+        \}\par
+    \}\par
+    \par
+    .instagram-icon \{\par
+        position: fixed;\par
+        left: 20px;\par
+        top: 70px;\par
+        font-size: 72px;\par
+        color: #404040;\par
+        cursor: pointer;\par
+        transition: color 0.3s;\par
+        z-index: 1000;\par
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);\par
+    \}\par
+    \par
+    .instagram-icon:hover \{\par
+        color: #FF69B4;\par
+    \}\par
+    \par
+    .controls-overlay \{\par
+        position: fixed;\par
+        top: 70px;\par
+        right: 20px;\par
+        background-color: rgba(255, 255, 255, 0.9);\par
+        padding: 5px;\par
+        border-radius: 4px;\par
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);\par
+        z-index: 1000;\par
+        width: 180px;\par
+    \}\par
+    \par
+    .concentric-circles \{\par
+        position: fixed;\par
+        top: 50%;\par
+        left: 50%;\par
+        transform: translate(-50%, -50%);\par
+        width: 300px;\par
+        height: 300px;\par
+        pointer-events: none;\par
+        z-index: 1000;\par
+    \}\par
+\par
+    .circle \{\par
+        position: absolute;\par
+        border: 2px solid rgba(255, 105, 180, 0.3);\par
+        border-radius: 50%;\par
+        top: 50%;\par
+        left: 50%;\par
+        transform: translate(-50%, -50%);\par
+        pointer-events: none;\par
+    \}\par
+\par
+    .circle:nth-child(1) \{\par
+        width: 60px;\par
+        height: 60px;\par
+        opacity: 1;\par
+    \}\par
+\par
+    .circle:nth-child(2) \{\par
+        width: 120px;\par
+        height: 120px;\par
+        opacity: 0.8;\par
+    \}\par
+\par
+    .circle:nth-child(3) \{\par
+        width: 180px;\par
+        height: 180px;\par
+        opacity: 0.6;\par
+    \}\par
+\par
+    .circle:nth-child(4) \{\par
+        width: 240px;\par
+        height: 240px;\par
+        opacity: 0.4;\par
+    \}\par
+\par
+    .circle:nth-child(5) \{\par
+        width: 300px;\par
+        height: 300px;\par
+        opacity: 0.2;\par
+    \}\par
+    \par
+    #search-input, #pin-name \{\par
+        width: 100%;\par
+        padding: 4px;\par
+        font-size: 12px;\par
+        font-family: 'Arial', sans-serif;\par
+        font-weight: bold;\par
+        text-transform: uppercase;\par
+        border: 1px solid #d0d0d0;\par
+        border-radius: 2px;\par
+        margin: 0;\par
+        box-sizing: border-box;\par
+        autocomplete: off;\par
+    \}\par
+    \par
+    #search-button, #create-pin-button \{\par
+        width: 100%;\par
+        padding: 4px;\par
+        font-size: 12px;\par
+        font-family: 'Arial', sans-serif;\par
+        font-weight: bold;\par
+        text-transform: uppercase;\par
+        background-color: #808080;\par
+        color: white;\par
+        border: none;\par
+        border-radius: 2px;\par
+        cursor: pointer;\par
+        transition: background-color 0.3s;\par
+        margin: 2px 0 0 0;\par
+    \}\par
+    \par
+    #search-button:hover, #create-pin-button:hover \{\par
+        background-color: #606060;\par
+    \}\par
+    \par
+    .search-container \{\par
+        margin: 0;\par
+    \}\par
+\par
+    .pin-creator \{\par
+        display: none;\par
+        margin-top: 2px;\par
+    \}\par
+\par
+    .pin-label \{\par
+        background: none !important;\par
+        border: none !important;\par
+        box-shadow: none !important;\par
+        font-family: 'Arial', sans-serif;\par
+        font-weight: bold;\par
+        font-size: 14px;\par
+        color: black;\par
+        margin-top: -25px;\par
+        width: auto !important;\par
+        text-align: center;\par
+    \}\par
+\par
+    .search-result-label \{\par
+        background: none !important;\par
+        border: none !important;\par
+        box-shadow: none !important;\par
+        font-family: 'Arial', sans-serif;\par
+        font-weight: bold;\par
+        font-size: 14px;\par
+        color: black;\par
+        opacity: 1 !important;\par
+        pointer-events: none;\par
+    \}\par
+\par
+    .leaflet-popup-tip-container \{\par
+        display: none;\par
+    \}\par
+\par
+    .leaflet-popup-content-wrapper \{\par
+        background: none;\par
+        box-shadow: none;\par
+        color: black;\par
+        font-weight: bold;\par
+        font-family: 'Arial', sans-serif;\par
+    \}\par
+\par
+    input:-webkit-autofill,\par
+    input:-webkit-autofill:hover,\par
+    input:-webkit-autofill:focus,\par
+    input:-webkit-autofill:active \{\par
+        -webkit-box-shadow: 0 0 0 30px white inset !important;\par
+    \}\par
+\par
+    .comments-box \{\par
+        position: fixed;\par
+        bottom: 20px;\par
+        right: 20px;\par
+        width: 180px;\par
+        height: 300px;\par
+        background-color: rgba(255, 255, 255, 0.9);\par
+        border: 1px solid #d0d0d0;\par
+        border-radius: 4px;\par
+        overflow-y: auto;\par
+        padding: 10px;\par
+        box-sizing: border-box;\par
+        z-index: 1000;\par
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);\par
+    \}\par
+\par
+    .comment \{\par
+        padding: 8px;\par
+        border-bottom: 1px solid #eee;\par
+        font-size: 12px;\par
+        font-family: 'Arial', sans-serif;\par
+        opacity: 0;\par
+        transform: translateY(20px);\par
+        animation: slideIn 0.3s ease forwards;\par
+        word-wrap: break-word;\par
+        overflow-wrap: break-word;\par
+        white-space: normal;\par
+    \}\par
+\par
+    .comment-user \{\par
+        font-weight: bold;\par
+        color: #FF69B4;\par
+    \}\par
+\par
+    .comment-time \{\par
+        color: #808080;\par
+        font-size: 10px;\par
+        margin-left: 5px;\par
+    \}\par
+\par
+    @keyframes slideIn \{\par
+        from \{\par
+            opacity: 0;\par
+            transform: translateY(20px);\par
+        \}\par
+        to \{\par
+            opacity: 1; \par
+            transform: translateY(0);\par
+        \}\par
+    \}\par
+</style>\par
+</head>\par
+\par
+<body>\par
+    <div class="map-header">\par
+        <div class="scrolling-title">\par
+            <span>#VRTWORKS_</span>\par
+        </div>\par
+    </div>\par
+    \par
+    <div class="concentric-circles">\par
+        <div class="circle"></div>\par
+        <div class="circle"></div>\par
+        <div class="circle"></div>\par
+        <div class="circle"></div>\par
+        <div class="circle"></div>\par
+    </div>\par
+    \par
+    <i class="fab fa-instagram instagram-icon"></i>\par
+    \par
+    <div class="controls-overlay">\par
+        <div class="search-container">\par
+            <input type="text" \par
+                   id="search-input" \par
+                   placeholder="SEARCH LOCATION..." \par
+                   autocomplete="off" \par
+                   spellcheck="false">\par
+            <button id="search-button">SEARCH</button>\par
+        </div>\par
+        <div class="pin-creator">\par
+            <input type="text" \par
+                   id="pin-name" \par
+                   placeholder="ENTER PIN NAME..." \par
+                   autocomplete="off" \par
+                   spellcheck="false">\par
+            <button id="create-pin-button">CREATE PIN</button>\par
+        </div>\par
+    </div>\par
+    \par
+    <div class="comments-box" id="comments-box"></div>\par
+    <div id="map"></div>\par
+\par
+    <script>\par
+        const yorkLat = 53.9600;\par
+        const yorkLon = -1.0873;\par
+        const SECRET_PASSWORD = "VRTW0RKZ";\par
+\par
+        const updatePinLabelOpacity = function(marker) \{\par
+            const markerLatLng = marker.getLatLng();\par
+            const markerPoint = map.latLngToContainerPoint(markerLatLng);\par
+            const centerPoint = map.getSize().divideBy(2);\par
+            const distance = markerPoint.distanceTo(centerPoint);\par
+            \par
+            const circles = document.querySelectorAll('.circle');\par
+            const radii = Array.from(circles).map(circle => circle.offsetWidth / 2);\par
+            \par
+            let opacity = 0;\par
+            for (let i = 0; i < radii.length; i++) \{\par
+                if (distance <= radii[i]) \{\par
+                    opacity = 1 - (i * 0.2);\par
+                    break;\par
+                \}\par
+            \}\par
+            \par
+            const tooltip = marker.getTooltip();\par
+            if (tooltip) \{\par
+                tooltip.getElement().style.opacity = opacity;\par
+            \}\par
+        \};\par
+\par
+        var map = L.map('map', \{\par
+            zoomControl: false\par
+        \}).setView([yorkLat, yorkLon], 13);\par
+        \par
+        L.tileLayer('https://\{s\}.basemaps.cartocdn.com/light_all/\{z\}/\{x\}/\{y\}\{r\}.png', \{\par
+            attribution: '\'a9 OpenStreetMap contributors, \'a9 CARTO',\par
+            subdomains: 'abcd',\par
+            maxZoom: 19\par
+        \}).addTo(map);\par
+        \par
+        var style = document.createElement('style');\par
+        style.textContent = `\par
+            .leaflet-tile-container img \{\par
+                filter: hue-rotate(320deg) saturate(0.8) !important;\par
+            \}\par
+        `;\par
+        document.head.appendChild(style);\par
+        \par
+        L.control.zoom(\{\par
+            position: 'bottomright'\par
+        \}).addTo(map);\par
+\par
+        function createPermanentLabel(marker, content) \{\par
+            var label = L.tooltip(\{\par
+                permanent: true,\par
+                direction: 'center',\par
+                className: 'pin-label'\par
+            \})\par
+            .setLatLng(marker.getLatLng())\par
+            .setContent(content);\par
+            \par
+            marker.bindTooltip(label);\par
+            return label;\par
+        \}\par
+\par
+        var initialMarker = L.circleMarker([53.96645941017445, -1.0790180365946125], \{\par
+            color: '#FF69B4',\par
+            fillColor: '#FF69B4',\par
+            fillOpacity: 0.5,\par
+            radius: 15\par
+        \}).addTo(map);\par
+        createPermanentLabel(initialMarker, '#6');\par
+        \par
+        map.on('move', function() \{\par
+            map.eachLayer(function(layer) \{\par
+                if (layer instanceof L.CircleMarker) \{\par
+                    updatePinLabelOpacity(layer);\par
+                \}\par
+            \});\par
+        \});\par
+        \par
+        document.querySelector('.instagram-icon').addEventListener('click', function() \{\par
+            window.open('https://www.instagram.com/vrtworks_?igsh=MWtwanM4OTJlamdubg==', '_blank');\par
+        \});\par
+        \par
+        function searchLocation() \{\par
+            var query = document.getElementById('search-input').value;\par
+            \par
+            if (query === SECRET_PASSWORD) \{\par
+                document.querySelector('.pin-creator').style.display = 'block';\par
+                document.getElementById('search-input').value = '';\par
+                return;\par
+            \}\par
+            \par
+            if (query) \{\par
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=$\{encodeURIComponent(query)\}`)\par
+                    .then(response => response.json())\par
+                    .then(data => \{\par
+                        if (data.length > 0) \{\par
+                            var lat = parseFloat(data[0].lat);\par
+                            var lon = parseFloat(data[0].lon);\par
+                            map.setView([lat, lon], 13);\par
+                            \par
+                            L.tooltip(\{\par
+                                permanent: true,\par
+                                direction: 'center',\par
+                                className: 'search-result-label'\par
+                            \})\par
+                            .setLatLng([lat, lon])\par
+                            .setContent(query.toUpperCase())\par
+                            .addTo(map);\par
+                            \par
+                        \} else \{\par
+                            alert('Location not found');\par
+                        \}\par
+                    \})\par
+                    .catch(error => console.error('Error:', error));\par
+            \}\par
+        \}\par
+        \par
+        document.getElementById('search-button').addEventListener('click', searchLocation);\par
+        document.getElementById('search-input').addEventListener('keypress', function(e) \{\par
+            if (e.key === 'Enter') \{\par
+                searchLocation();\par
+            \}\par
+        \});\par
+        \par
+        let isCreatingPin = false;\par
+        \par
+        function startPinCreation() \{\par
+            isCreatingPin = true;\par
+            map.getContainer().style.cursor = 'crosshair';\par
+        \}\par
+        \par
+        function createPin(e) \{\par
+            if (!isCreatingPin) return;\par
+        \par
+            const pinName = document.getElementById('pin-name').value || 'UNNAMED PIN';\par
+            \par
+            var marker = L.circleMarker(e.latlng, \{\par
+                color: '#FF69B4',\par
+                fillColor: '#FF69B4',\par
+                fillOpacity: 0.5,\par
+                radius: 15\par
+            \}).addTo(map);\par
+            \par
+            createPermanentLabel(marker, pinName.toUpperCase());\par
+        \par
+            isCreatingPin = false;\par
+            map.getContainer().style.cursor = '';\par
+        \}\par
+        \par
+        document.getElementById('create-pin-button').addEventListener('click', startPinCreation);\par
+        map.on('click', createPin);\par
+        \par
+        window.addEventListener('resize', function() \{\par
+            map.invalidateSize();\par
+        \});\par
+\par
+        const inputs = document.querySelectorAll('input');\par
+        inputs.forEach(input => \{\par
+            input.setAttribute('autocomplete', 'off');\par
+            input.setAttribute('autocorrect', 'off');\par
+            input.setAttribute('autocapitalize', 'off');\par
+            input.setAttribute('spellcheck', 'false');\par
+        \});\par
+\par
+        const sampleUsers = ["alex_89", "creative_soul", "wanderlust_22", "art_lover", "urban_explorer", "photo_ninja", "street_scout", "city_walker"];\par
+        const sampleComments = [\par
+            "Amazing spot! \f1\u-10180?\u-8417?\f0 ",\par
+            "Love the vibes here \f2\u10024?\f0 ",\par
+            "Perfect day for exploring \f1\u-10180?\u-8443?\f0 ",\par
+            "Can't wait to visit again! \f3\u-10179?\u-8710?\u-497?\f0 ",\par
+            "Great location \f1\u-10179?\u-9011?\f0 ",\par
+            "Just discovered this place! \f1\u-10179?\u-8628?\f0 ",\par
+            "Beautiful area \f1\u-10180?\u-8385?\f0 ",\par
+            "Hidden gem \f1\u-10179?\u-9074?\f0 "\par
+        ];\par
+\par
+        function formatTime(date) \{\par
+            const hours = date.getHours().toString().padStart(2, '0');\par
+            const minutes = date.getMinutes().toString().padStart(2, '0');\par
+            return `$\{hours\}:$\{minutes\}`;\par
+        \}\par
+\par
+        function updateComments() \{\par
+            const commentsBox = document.getElementById('comments-box');\par
+            const numComments = Math.floor(Math.random() * 3) + 3;\par
+            const selectedComments = [];\par
+            const currentTime = new Date();\par
+            \par
+            for (let i = 0; i < numComments; i++) \{\par
+                const randomCommentIndex = Math.floor(Math.random() * sampleComments.length);\par
+                const randomUserIndex = Math.floor(Math.random() * sampleUsers.length);\par
+                const timeOffset = (numComments - i - 1) * Math.floor(Math.random() * 10); \par
+                const commentTime = new Date(currentTime - timeOffset * 60000);\par
+                \par
+                selectedComments.push(\{\par
+                    user: sampleUsers[randomUserIndex],\par
+                    comment: sampleComments[randomCommentIndex],\par
+                    time: formatTime(commentTime)\par
+                \});\par
+            \}\par
+\par
+            const existingComments = commentsBox.querySelectorAll('.comment');\par
+            existingComments.forEach(comment => \{\par
+                comment.style.opacity = '0';\par
+                comment.style.transform = 'translateY(20px)';\par
+            \});\par
+\par
+            setTimeout(() => \{\par
+                commentsBox.innerHTML = selectedComments\par
+                    .map((\{user, comment, time\}) => `\par
+                        <div class="comment">\par
+                            <span class="comment-user">@$\{user\}</span>\par
+                            <span class="comment-time">$\{time\}</span>\par
+                            <br>$\{comment\}\par
+                        </div>\par
+                    `)\par
+                    .join('');\par
+            \}, 300);\par
+        \}\par
+\par
+        updateComments();\par
+\par
+        function setRandomInterval() \{\par
+            const minDelay = 3000; \par
+            const maxDelay = 10000; \par
+            const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;\par
+            \par
+            setTimeout(() => \{\par
+                updateComments();\par
+                setRandomInterval();\par
+            \}, randomDelay);\par
+        \}\par
+\par
+        setRandomInterval();\par
+    </script>\par
+</body>\par
+</html>\par
+}
+ 
